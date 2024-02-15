@@ -1,16 +1,17 @@
-import time
-import json
-import collections
-import random
-import math
-import string
 import base64
-import urllib
-import hmac
+import collections
 import hashlib
-import requests
+import hmac
+import json
+import math
 import os
+import random
+import string
+import time
+import urllib
+
 import pandas as pd
+import requests
 
 
 class Gallery:
@@ -52,7 +53,9 @@ class Gallery:
         if not secret_key:
             raise Exception("'api_secret' cannot be empty")
         if not isinstance(secret_key, str):
-            raise TypeError(f"Invalid type {type(secret_key)} for variable 'api_secret'")
+            raise TypeError(
+                f"Invalid type {type(secret_key)} for variable 'api_secret'"
+            )
         self._api_secret = secret_key
 
     def build_oauth_params(self):
@@ -60,11 +63,13 @@ class Gallery:
         :return:  A dictionary consisting of params for third-party
         signature generation code based upon the OAuth 1.0a standard.
         """
-        return {'oauth_consumer_key': self.api_key,
-                'oauth_nonce': self.generate_nonce(5),
-                'oauth_signature_method': 'HMAC-SHA1',
-                'oauth_timestamp': str(int(math.floor(time.time()))),
-                'oauth_version': '1.0'}
+        return {
+            "oauth_consumer_key": self.api_key,
+            "oauth_nonce": self.generate_nonce(5),
+            "oauth_signature_method": "HMAC-SHA1",
+            "oauth_timestamp": str(int(math.floor(time.time()))),
+            "oauth_version": "1.0",
+        }
 
     @staticmethod
     def generate_nonce(length=5):
@@ -72,7 +77,7 @@ class Gallery:
         :return: Generate pseudorandom number
         """
         tmp_string = string.ascii_uppercase + string.digits + string.ascii_lowercase
-        return ''.join([str(random.choice(tmp_string)) for i in range(length)])
+        return "".join([str(random.choice(tmp_string)) for i in range(length)])
 
     def generate_signature(self, http_method, url, params):
         """
@@ -82,10 +87,12 @@ class Gallery:
         sorted_params = collections.OrderedDict(sorted(params.items()))
 
         normalized_params = urllib.parse.urlencode(sorted_params)
-        base_string = "&".join((http_method.upper(), quote(url), quote(normalized_params)))
+        base_string = "&".join(
+            (http_method.upper(), quote(url), quote(normalized_params))
+        )
 
-        secret_bytes = bytes("&".join([self.api_secret, '']), 'ascii')
-        base_bytes = bytes(base_string, 'ascii')
+        secret_bytes = bytes("&".join([self.api_secret, ""]), "ascii")
+        base_bytes = bytes(base_string, "ascii")
         sig = hmac.new(secret_bytes, base_bytes, hashlib.sha1)
         return base64.b64encode(sig.digest())
 
@@ -93,11 +100,11 @@ class Gallery:
         """
         :return: workflows in a subscription
         """
-        method = 'GET'
-        url = self.api_location + '/workflows/subscription/'
+        method = "GET"
+        url = self.api_location + "/workflows/subscription/"
         params = self.build_oauth_params()
         signature = self.generate_signature(method, url, params)
-        params.update({'oauth_signature': signature})
+        params.update({"oauth_signature": signature})
         output = requests.get(url, params=params)
         output, output_content = output, json.loads(output.content.decode("utf8"))
         return output, output_content
@@ -106,11 +113,11 @@ class Gallery:
         """
         :return: Returns the questions for the given Alteryx Analytics App
         """
-        method = 'GET'
-        url = self.api_location + '/workflows/' + app_id + '/questions/'
+        method = "GET"
+        url = self.api_location + "/workflows/" + app_id + "/questions/"
         params = self.build_oauth_params()
         signature = self.generate_signature(method, url, params)
-        params.update({'oauth_signature': signature})
+        params.update({"oauth_signature": signature})
         output = requests.get(url, params=params)
         output, output_content = output, json.loads(output.content.decode("utf8"))
         return output, output_content
@@ -120,17 +127,19 @@ class Gallery:
         Queue an app execution job.
         :return:  Returns ID of the job
         """
-        method = 'POST'
-        url = self.api_location + '/workflows/' + app_id + '/jobs/'
+        method = "POST"
+        url = self.api_location + "/workflows/" + app_id + "/jobs/"
         params = self.build_oauth_params()
         signature = self.generate_signature(method, url, params)
-        params.update({'oauth_signature': signature})
+        params.update({"oauth_signature": signature})
 
-        if 'payload' in kwargs:
-            output = requests.post(url,
-                                   json=kwargs['payload'],
-                                   headers={'Content-Type': 'application/json'},
-                                   params=params)
+        if "payload" in kwargs:
+            output = requests.post(
+                url,
+                json=kwargs["payload"],
+                headers={"Content-Type": "application/json"},
+                params=params,
+            )
         else:
             output = requests.post(url, params=params)
 
@@ -141,11 +150,11 @@ class Gallery:
         """
         :return: Returns the jobs for the given Alteryx Analytics App
         """
-        method = 'GET'
-        url = self.api_location + '/workflows/' + app_id + '/jobs/'
+        method = "GET"
+        url = self.api_location + "/workflows/" + app_id + "/jobs/"
         params = self.build_oauth_params()
         signature = self.generate_signature(method, url, params)
-        params.update({'oauth_signature': signature})
+        params.update({"oauth_signature": signature})
         output = requests.get(url, params=params)
         output, output_content = output, json.loads(output.content.decode("utf8"))
         return output, output_content
@@ -154,11 +163,11 @@ class Gallery:
         """
         :return: Retrieves the job and its current state
         """
-        method = 'GET'
-        url = self.api_location + '/jobs/' + job_id + '/'
+        method = "GET"
+        url = self.api_location + "/jobs/" + job_id + "/"
         params = self.build_oauth_params()
         signature = self.generate_signature(method, url, params)
-        params.update({'oauth_signature': signature})
+        params.update({"oauth_signature": signature})
         output = requests.get(url, params=params)
         output, output_content = output, json.loads(output.content.decode("utf8"))
         return output, output_content
@@ -167,11 +176,11 @@ class Gallery:
         """
         :return: Returns the output for a given job (FileURL)
         """
-        method = 'GET'
-        url = self.api_location + '/jobs/' + job_id + '/output/' + output_id + '/'
+        method = "GET"
+        url = self.api_location + "/jobs/" + job_id + "/output/" + output_id + "/"
         params = self.build_oauth_params()
         signature = self.generate_signature(method, url, params)
-        params.update({'oauth_signature': signature})
+        params.update({"oauth_signature": signature})
         output = requests.get(url, params=params)
         output, output_content = output, output.content.decode("utf8")
         return output, output_content
@@ -180,12 +189,11 @@ class Gallery:
         """
         :return: Returns the App that was requested
         """
-        method = 'GET'
-        url = self.api_location + '/' + app_id + '/package/'
+        method = "GET"
+        url = self.api_location + "/" + app_id + "/package/"
         params = self.build_oauth_params()
         signature = self.generate_signature(method, url, params)
-        params.update({'oauth_signature': signature})
+        params.update({"oauth_signature": signature})
         output = requests.get(url, params=params)
         output, output_content = output, json.loads(output.content.decode("utf8"))
         return output, output_content
-
