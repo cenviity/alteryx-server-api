@@ -194,6 +194,19 @@ class Gallery:
         output, output_content = output, output.content.decode("utf8")
         return output, output_content
 
+    def get_workflows(self):
+        """
+        :return: Returns Workflows
+        """
+        method = "GET"
+        url = self.api_location + "/admin/v1/workflows/"
+        params = self.build_oauth_params()
+        signature = self.generate_signature(method, url, params)
+        params.update({"oauth_signature": signature})
+        output = requests.get(url, params=params)
+        output, output_content = output, json.loads(output.content.decode("utf8"))
+        return output, output_content
+
     def get_app(self, app_id):
         """
         :return: Returns the App that was requested
